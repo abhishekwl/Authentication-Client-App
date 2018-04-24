@@ -9,7 +9,8 @@ export default class App extends React.Component {
     email: "",
     password: "",
     progress: false,
-    uid: ""
+    uid: "",
+    stage: false
   };
 
   componentWillMount() {
@@ -22,6 +23,9 @@ export default class App extends React.Component {
       messagingSenderId: "365096881394"
     };
     if (firebase.apps.length===0) firebase.initializeApp(config);
+    console.ignoredYellowBox = [
+      'Setting a timer'
+    ];
   }
 
   render() {
@@ -67,6 +71,7 @@ export default class App extends React.Component {
 
   encryptFun(data) {
     var date = new Date();
+    this.setState({ stage: true });
 
     var key = CryptoJS.enc.Latin1.parse(date.getMinutes());
     var iv = CryptoJS.enc.Latin1.parse(date.getMinutes());
@@ -78,15 +83,24 @@ export default class App extends React.Component {
     //console.log('encrypted: ' + encrypted);
     var decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv, padding: CryptoJS.pad.ZeroPadding }).toString(CryptoJS.enc.Utf8);
     //console.log('decrypted: ' + decrypted.toString(CryptoJS.enc.Utf8));
+
     Alert.alert("Auth", "ENCRYPTED: "+encrypted+"\nKEY: "+date.getMinutes().toString()+"\nDECRYPTED: "+decrypted, null);
+    firebase.database().ref("Users/" +firebase.auth().currentUser.uid).set("COMPLETE");
   }
 
   onSignInButtonPress() {
-    this.setState({ progress: true });
+    this.setState({ progress: true, stage: false });
 
     firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then(user=>{
       this.setState({ progress: false, uid: user.uid });
-      this.encryptFun(user.uid);
+
+      firebase.database().ref("Users/"+user.uid).on("value", (snapshot)=>{
+        if (snapshot.val()==="ACK") {
+          this.encryptFun(user.uid);
+        } else if (snapshot.val()==="COMPLETE" && this.state.stage===false)  {
+          Alert.alert("Authentication Error", "Please sign in on the Website first.", null);
+        }
+      });
     }).catch(err=>{
       this.setState({ progress: false });
       Alert.alert("Authentication Error", err.toString(), null);
