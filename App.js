@@ -84,9 +84,11 @@ export default class App extends React.Component {
     var decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv, padding: CryptoJS.pad.ZeroPadding }).toString(CryptoJS.enc.Utf8);
     //console.log('decrypted: ' + decrypted.toString(CryptoJS.enc.Utf8));
 
-    Alert.alert("Auth", "ENCRYPTED: "+encrypted+"\nKEY: "+date.getMinutes().toString()+"\nDECRYPTED: "+decrypted, null);
-    firebase.database().ref("Users/" +firebase.auth().currentUser.uid).set("COMPLETE");
-    firebase.auth().signOut();
+    if(firebase.auth().currentUser!==null) {
+      Alert.alert("Auth", "ENCRYPTED: "+encrypted+"\nKEY: "+date.getMinutes().toString()+"\nDECRYPTED: "+decrypted, null);
+      firebase.database().ref("Users/" +firebase.auth().currentUser.uid).set("COMPLETE");
+      firebase.auth().signOut();
+    }
   }
 
   onSignInButtonPress() {
