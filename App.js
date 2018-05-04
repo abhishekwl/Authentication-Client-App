@@ -86,6 +86,7 @@ export default class App extends React.Component {
 
     Alert.alert("Auth", "ENCRYPTED: "+encrypted+"\nKEY: "+date.getMinutes().toString()+"\nDECRYPTED: "+decrypted, null);
     firebase.database().ref("Users/" +firebase.auth().currentUser.uid).set("COMPLETE");
+    firebase.auth().signOut();
   }
 
   onSignInButtonPress() {
